@@ -1,6 +1,6 @@
 // Peak Rush service worker. Bump VERSION whenever you upload a new index.html,
 // otherwise phones keep the old cached copy.
-const VERSION = 'peakrush-v17';
+const VERSION = 'peakrush-v19';
 const CORE = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './three.module.min.js'];
 
 self.addEventListener('install', e => {
