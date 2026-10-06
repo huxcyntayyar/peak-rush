@@ -270,6 +270,8 @@
   .switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .15s}
   .switch[aria-checked="true"]{background:var(--blue)} .switch[aria-checked="true"]::after{transform:translateX(22px)}
   #tiltMeter{position:absolute;left:50%;top:calc(38px + var(--st));width:120px;height:14px;margin-left:-60px;border-radius:7px;background:rgba(15,34,66,.28);pointer-events:none}
+  #tiltMeter.jmp{animation:tjmp .5s ease-out}
+  @keyframes tjmp{0%{background:rgba(255,194,51,.95);transform:translateY(-6px)}100%{background:rgba(15,34,66,.28);transform:none}}
   #tiltMeter .mid{position:absolute;left:59px;top:2px;width:2px;height:10px;background:rgba(255,255,255,.7)}
   #tiltMeter b{position:absolute;left:53px;top:1px;width:14px;height:12px;border-radius:6px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
   .tiltdemo{height:70px;display:grid;place-items:center} .tiltdemo i{width:96px;height:52px;border-radius:10px;border:4px solid var(--ink);animation:tiltd 2.4s ease-in-out infinite}
@@ -4197,7 +4199,7 @@ const I18N = {
     'Fast and stable at speed.': 'تیز رفتاری پر بھی مستحکم۔', 'Red race suit.': 'سرخ ریس سوٹ۔', 'Orange and black pro race suit.': 'نارنجی اور کالا پرو ریس سوٹ۔', 'Black race skis with orange edges.': 'نارنجی کناروں والی کالی ریس اسکیز۔', 'Blue shell, yellow helmet.': 'نیلی جیکٹ، پیلا ہیلمٹ۔',
     'Yellow jacket, plum pants.': 'پیلی جیکٹ، جامنی پتلون۔', 'Green jacket, white pants.': 'سبز جیکٹ، سفید پتلون۔',
     'Sound effects': 'صوتی اثرات', 'Music': 'موسیقی', 'On-screen buttons': 'اسکرین کے بٹن', 'Ghost of the best run (races)': 'بہترین رن کا گھوسٹ (ریس)',
-    'Steering sensitivity': 'اسٹیئرنگ کی حساسیت', 'Low': 'کم', 'Normal': 'عام', 'High': 'زیادہ', 'Graphics': 'گرافکس', 'Sharp + shadows': 'واضح + سائے', 'Full HD': 'فل ایچ ڈی', 'Sharp': 'واضح', 'Steering': 'اسٹیئرنگ', 'Touch': 'ٹچ', 'Motion (tilt)': 'موشن (جھکاؤ)', 'Tilt sensitivity': 'جھکاؤ کی حساسیت', 'Centre position': 'درمیانی پوزیشن', 'Recenter now': 'ابھی سینٹر کریں', 'Centred': 'سینٹر ہو گیا', 'No sensor yet': 'ابھی سینسر نہیں ملا', 'Recenter tilt': 'جھکاؤ سینٹر کریں', 'Tilt works only from your own game link. Touch steering is on.': 'جھکاؤ صرف آپ کے اپنے گیم لنک پر چلتا ہے۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Motion controls': 'موشن کنٹرولز', 'Use touch instead': 'ٹچ استعمال کریں', 'Allow motion': 'موشن کی اجازت دیں', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'پیک رش میں فون جھکا کر اسکیئر موڑا جاتا ہے۔ موشن کی اجازت دیں تاکہ گیم جھکاؤ پڑھ سکے۔', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': 'فون آرام سے لیٹا کر پکڑیں۔ کاؤنٹ ڈاؤن شروع ہونے پر یہی پوزیشن درمیان مانی جائے گی۔', 'No motion sensor found. Use the Left/Right buttons.': 'موشن سینسر نہیں ملا۔ بائیں/دائیں بٹن استعمال کریں۔', 'Motion access was not allowed. Touch steering is on.': 'موشن کی اجازت نہیں ملی۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Controls': 'کنٹرولز', 'Left/Right buttons': 'بائیں/دائیں بٹن', 'Exit': 'باہر نکلیں', 'Back': 'واپس', 'Weather': 'موسم', 'Clear': 'صاف', 'Snowfall': 'برفباری', 'Heavy Snow': 'شدید برفباری', 'Foggy': 'دھند', 'Windy': 'تیز ہوا', 'Fast': 'تیز',
+    'Jump by motion': 'موشن سے چھلانگ', 'Off': 'بند', 'Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.': 'فون ہاتھ میں پکڑ کر اوپر چھلانگ لگائیں، یا فون کو تیزی سے اوپر اٹھائیں، اسکیئر بھی چھلانگ لگائے گا۔', 'Steering sensitivity': 'اسٹیئرنگ کی حساسیت', 'Low': 'کم', 'Normal': 'عام', 'High': 'زیادہ', 'Graphics': 'گرافکس', 'Sharp + shadows': 'واضح + سائے', 'Full HD': 'فل ایچ ڈی', 'Sharp': 'واضح', 'Steering': 'اسٹیئرنگ', 'Touch': 'ٹچ', 'Motion (tilt)': 'موشن (جھکاؤ)', 'Tilt sensitivity': 'جھکاؤ کی حساسیت', 'Centre position': 'درمیانی پوزیشن', 'Recenter now': 'ابھی سینٹر کریں', 'Centred': 'سینٹر ہو گیا', 'No sensor yet': 'ابھی سینسر نہیں ملا', 'Recenter tilt': 'جھکاؤ سینٹر کریں', 'Tilt works only from your own game link. Touch steering is on.': 'جھکاؤ صرف آپ کے اپنے گیم لنک پر چلتا ہے۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Motion controls': 'موشن کنٹرولز', 'Use touch instead': 'ٹچ استعمال کریں', 'Allow motion': 'موشن کی اجازت دیں', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'پیک رش میں فون جھکا کر اسکیئر موڑا جاتا ہے۔ موشن کی اجازت دیں تاکہ گیم جھکاؤ پڑھ سکے۔', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': 'فون آرام سے لیٹا کر پکڑیں۔ کاؤنٹ ڈاؤن شروع ہونے پر یہی پوزیشن درمیان مانی جائے گی۔', 'No motion sensor found. Use the Left/Right buttons.': 'موشن سینسر نہیں ملا۔ بائیں/دائیں بٹن استعمال کریں۔', 'Motion access was not allowed. Touch steering is on.': 'موشن کی اجازت نہیں ملی۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Controls': 'کنٹرولز', 'Left/Right buttons': 'بائیں/دائیں بٹن', 'Exit': 'باہر نکلیں', 'Back': 'واپس', 'Weather': 'موسم', 'Clear': 'صاف', 'Snowfall': 'برفباری', 'Heavy Snow': 'شدید برفباری', 'Foggy': 'دھند', 'Windy': 'تیز ہوا', 'Fast': 'تیز',
     'Progress': 'پیش رفت', 'Reset progress': 'پیش رفت ختم کریں', 'Tap again to confirm': 'تصدیق کے لیے دوبارہ ٹیپ کریں', 'Progress reset': 'پیش رفت ختم ہو گئی',
     'Done': 'ٹھیک ہے', 'Language': 'زبان', 'Paused': 'رکا ہوا', 'Resume': 'جاری رکھیں', 'Restart': 'دوبارہ شروع', 'Quit to menu': 'مینو پر جائیں',
     'Gold': 'سونا', 'Silver': 'چاندی', 'Bronze': 'کانسی', 'gold': 'سونا', 'silver': 'چاندی', 'bronze': 'کانسی', 'No medal': 'کوئی تمغہ نہیں',
@@ -4250,7 +4252,7 @@ const I18N = {
     'Fast and stable at speed.': '高速下依然穩定。', 'Red race suit.': '紅色競賽服。', 'Orange and black pro race suit.': '橘黑職業競賽服。', 'Black race skis with orange edges.': '橘邊黑色競賽雪板。', 'Blue shell, yellow helmet.': '藍色外套，黃色頭盔。',
     'Yellow jacket, plum pants.': '黃色外套，紫紅長褲。', 'Green jacket, white pants.': '綠色外套，白色長褲。',
     'Sound effects': '音效', 'Music': '音樂', 'On-screen buttons': '螢幕按鈕', 'Ghost of the best run (races)': '最佳紀錄幽靈（競速）',
-    'Steering sensitivity': '轉向靈敏度', 'Low': '低', 'Normal': '標準', 'High': '高', 'Graphics': '畫質', 'Sharp + shadows': '清晰＋陰影', 'Full HD': '全高清', 'Sharp': '清晰', 'Steering': '轉向方式', 'Touch': '觸控', 'Motion (tilt)': '體感（傾斜）', 'Tilt sensitivity': '傾斜靈敏度', 'Centre position': '中心位置', 'Recenter now': '立即校正', 'Centred': '已校正', 'No sensor yet': '尚未偵測到感測器', 'Recenter tilt': '校正傾斜', 'Tilt works only from your own game link. Touch steering is on.': '傾斜操作只能在你自己的遊戲連結使用，已改用觸控。', 'Motion controls': '體感操作', 'Use touch instead': '改用觸控', 'Allow motion': '允許動作感測', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'Peak Rush 透過傾斜手機來轉向。請允許動作感測，讓遊戲讀取傾斜角度。', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': '以舒適的姿勢橫握手機，倒數開始時的位置即為中心。', 'No motion sensor found. Use the Left/Right buttons.': '未偵測到動作感測器，請使用左右按鈕。', 'Motion access was not allowed. Touch steering is on.': '未允許動作感測，已改用觸控轉向。', 'Controls': '操作', 'Left/Right buttons': '左右按鈕', 'Exit': '離開', 'Back': '返回', 'Weather': '天氣', 'Clear': '晴朗', 'Snowfall': '降雪', 'Heavy Snow': '大雪', 'Foggy': '霧', 'Windy': '強風', 'Fast': '流暢',
+    'Jump by motion': '體感跳躍', 'Off': '關閉', 'Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.': '手握手機往上跳，或快速把手機往上抬，滑雪者就會跳起來。', 'Steering sensitivity': '轉向靈敏度', 'Low': '低', 'Normal': '標準', 'High': '高', 'Graphics': '畫質', 'Sharp + shadows': '清晰＋陰影', 'Full HD': '全高清', 'Sharp': '清晰', 'Steering': '轉向方式', 'Touch': '觸控', 'Motion (tilt)': '體感（傾斜）', 'Tilt sensitivity': '傾斜靈敏度', 'Centre position': '中心位置', 'Recenter now': '立即校正', 'Centred': '已校正', 'No sensor yet': '尚未偵測到感測器', 'Recenter tilt': '校正傾斜', 'Tilt works only from your own game link. Touch steering is on.': '傾斜操作只能在你自己的遊戲連結使用，已改用觸控。', 'Motion controls': '體感操作', 'Use touch instead': '改用觸控', 'Allow motion': '允許動作感測', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'Peak Rush 透過傾斜手機來轉向。請允許動作感測，讓遊戲讀取傾斜角度。', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': '以舒適的姿勢橫握手機，倒數開始時的位置即為中心。', 'No motion sensor found. Use the Left/Right buttons.': '未偵測到動作感測器，請使用左右按鈕。', 'Motion access was not allowed. Touch steering is on.': '未允許動作感測，已改用觸控轉向。', 'Controls': '操作', 'Left/Right buttons': '左右按鈕', 'Exit': '離開', 'Back': '返回', 'Weather': '天氣', 'Clear': '晴朗', 'Snowfall': '降雪', 'Heavy Snow': '大雪', 'Foggy': '霧', 'Windy': '強風', 'Fast': '流暢',
     'Progress': '進度', 'Reset progress': '重設進度', 'Tap again to confirm': '再點一次確認', 'Progress reset': '進度已重設',
     'Done': '完成', 'Language': '語言', 'Paused': '已暫停', 'Resume': '繼續', 'Restart': '重新開始', 'Quit to menu': '回到選單',
     'Gold': '金牌', 'Silver': '銀牌', 'Bronze': '銅牌', 'gold': '金牌', 'silver': '銀牌', 'bronze': '銅牌', 'No medal': '未獲獎牌',
@@ -5361,6 +5363,7 @@ const Tilt = {
       // light smoothing of the raw gravity vector
       const k = 0.35; this.gx += (a.x - this.gx) * k; this.gy += (a.y - this.gy) * k; this.gz += ((a.z || 0) - this.gz) * k;
       this.have = true; this.lastEvt = performance.now(); this.src = 'motion';
+      this.jumpSample(a.x, a.y, a.z || 0, this.lastEvt);
     });
     addEventListener('deviceorientation', e => {
       if (e.beta == null || (this.src === 'motion' && performance.now() - this.lastEvt < 500)) return;
@@ -5368,6 +5371,32 @@ const Tilt = {
       this.gx = -Math.cos(b) * Math.sin(g) * 9.81; this.gy = Math.sin(b) * 9.81; this.gz = -Math.cos(b) * Math.cos(g) * 9.81;
       this.have = true; this.lastEvt = performance.now(); this.src = 'orient';
     });
+  },
+  // ---- physical jump: a push up (more than 1 g along gravity) followed
+  // within 0.45 s by a moment of near free fall. Waiting for the free
+  // fall stops bumps, taps and hard steering from counting as jumps.
+  // A quick lift of the phone gives the same pattern, so it works seated too.
+  sx: 0, sy: 0, sz: 0, sInit: false, spikeT: 0, jumpCool: 0, jumpQ: 0, holdUntil: 0,
+  jumpOn() { return this.enabled() && Save.data.settings.tiltJump !== false; },
+  jumpSample(x, y, z, now) {
+    if (!this.sInit) { this.sx = x; this.sy = y; this.sz = z; this.sInit = true; return; }
+    const gm = Math.hypot(this.sx, this.sy, this.sz) || 9.81;
+    const v = (x * this.sx + y * this.sy + z * this.sz) / gm;      // acceleration along gravity (9.8 at rest)
+    const dev = Math.abs(Math.hypot(x, y, z) - gm);
+    // slow gravity reference, frozen while the phone is moving hard
+    if (dev < 2.5) { const k = 0.04; this.sx += (x - this.sx) * k; this.sy += (y - this.sy) * k; this.sz += (z - this.sz) * k; }
+    if (!this.jumpOn() || now < this.jumpCool) return;
+    const js = Save.data.settings.jumpSens || 1;
+    const up = 4.6 / js, fall = 5.2 / js;
+    if (v > gm + up) { this.spikeT = now; this.holdUntil = now + 600; }
+    else if (this.spikeT && now - this.spikeT < 450 && v < gm - fall) {
+      this.spikeT = 0; this.jumpQ = now; this.jumpCool = now + 900; this.holdUntil = now + 700;
+    }
+    if (this.spikeT && now - this.spikeT > 450) this.spikeT = 0;
+  },
+  takeJump() {
+    if (!this.jumpQ) return false;
+    const fresh = performance.now() - this.jumpQ < 300; this.jumpQ = 0; return fresh;
   },
   angle() { return Math.atan2(this.gx, this.gy); },
   inPlane() { return Math.hypot(this.gx, this.gy); },
@@ -5386,6 +5415,7 @@ const Tilt = {
     let d = this.angle() - this.zero; d = Math.atan2(Math.sin(d), Math.cos(d));
     const deg = -d * 180 / Math.PI;                      // clockwise = right = positive
     this.raw = deg;
+    if (performance.now() < this.holdUntil) return this.steer;   // jumping shakes the phone: keep the last steering
     const dead = 3, full = 24 / this.sens();
     let s = clamp((Math.abs(deg) - dead) / (full - dead), 0, 1);
     s = Math.pow(s, 1.35) * Math.sign(deg);             // soft around centre, full lock at the end
@@ -5399,7 +5429,7 @@ const Tilt = {
 Object.assign(UI, {
   motionPermissionSheet(go) {
     this.openSheet('<h2>Motion controls</h2><p class="sheetsub">Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.</p>' +
-      '<div class="tiltdemo"><i></i></div><p class="sheetsub">Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.</p>' +
+      '<div class="tiltdemo"><i></i></div><p class="sheetsub">Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.</p><p class="sheetsub">Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.</p>' +
       '<div class="btnrow"><button class="btn ghost" id="mpTouch">Use touch instead</button><button class="btn primary" id="mpAllow">Allow motion</button></div>');
     $('mpAllow').onclick = () => {
       Tilt.request().then(ok => {
@@ -5422,6 +5452,11 @@ Object.assign(UI, {
       const t = Tilt.update(dt);
       const touchSteer = o.steer;
       o.steer = clamp(Math.abs(touchSteer) > 0.05 ? touchSteer + t * 0.5 : t, -1, 1);
+      if (Tilt.takeJump() && this.enabled !== false) {
+        if (r && r.air) o.flip = true;                   // already in the air: a second jump does a flip
+        else if (!o.jump) { o.jump = true; this.stats.jumps++; }
+        const m = $('tiltMeter'); if (m) { m.classList.remove('jmp'); void m.offsetWidth; m.classList.add('jmp'); }
+      }
     }
     return o;
   };
@@ -5439,7 +5474,7 @@ Object.assign(UI, {
   };
   // countdown: capture the neutral position; GO: lock it
   const bc = Game.beginCountdown;
-  Game.beginCountdown = function (...a) { Tilt.calN = 0; Tilt.zero = null; this.motionWait = 0; this.motionWarned = false; const r = bc.apply(this, a); this.syncTouch(); return r; };
+  Game.beginCountdown = function (...a) { Tilt.calN = 0; Tilt.zero = null; Tilt.jumpQ = 0; Tilt.spikeT = 0; this.motionWait = 0; this.motionWarned = false; const r = bc.apply(this, a); this.syncTouch(); return r; };
   const up = Game.update;
   Game.update = function (dt) {
     up.call(this, dt);
@@ -5472,13 +5507,17 @@ Object.assign(UI, {
       '<div class="row"><label>Steering</label><div class="seg" id="sSteer"><button data-v="touch">Touch</button><button data-v="motion">Motion (tilt)</button></div></div>' +
       '<p class="sheetsub" id="sSteerMsg" hidden style="margin:-4px 0 6px;color:var(--red,#c0392b)"></p>' +
       '<div class="row" id="sTiltRow"><label>Tilt sensitivity</label><div class="seg" id="sTilt">' + [['0.7', 'Low'], ['1', 'Normal'], ['1.4', 'High']].map(([v, n]) => '<button data-v="' + v + '">' + n + '</button>').join('') + '</div></div>' +
+      '<div class="row" id="sJumpRow"><label>Jump by motion</label><div class="seg" id="sJump">' + [['0', 'Off'], ['0.75', 'Low'], ['1', 'Normal'], ['1.35', 'High']].map(([v, n]) => '<button data-v="' + v + '">' + n + '</button>').join('') + '</div></div>' +
+      '<p class="sheetsub" id="sJumpTip" style="margin:-4px 0 6px">Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.</p>' +
       '<div class="row" id="sCalRow"><label>Centre position</label><button class="btn ghost" id="sCal" style="min-height:38px">Recenter now</button></div>';
     anchor.after(rows);
     const paint = () => {
       const motion = s.steer === 'motion';
       $('sSteer').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === (motion ? 'motion' : 'touch'))));
       $('sTilt').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === (s.tiltSens || 1))));
-      $('sTiltRow').hidden = !motion; $('sCalRow').hidden = !motion;
+      $('sTiltRow').hidden = !motion; $('sCalRow').hidden = !motion; $('sJumpRow').hidden = !motion; $('sJumpTip').hidden = !motion;
+      const jv = s.tiltJump === false ? 0 : (s.jumpSens || 1);
+      $('sJump').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === jv)));
       anchor.style.opacity = motion ? 0.45 : 1;          // Left/Right buttons only matter for touch steering
     };
     const say = t => { const m = $('sSteerMsg'); if (!m) return; m.textContent = t || ''; m.hidden = !t; if (t && typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(m); };
@@ -5508,6 +5547,7 @@ Object.assign(UI, {
       s.steer = b.dataset.v; Save.save(); paint(); this.g.syncTouch();
     });
     $('sTilt').querySelectorAll('button').forEach(b => b.onclick = () => { this.g.click(); s.tiltSens = +b.dataset.v; Save.save(); paint(); });
+    $('sJump').querySelectorAll('button').forEach(b => b.onclick = () => { this.g.click(); const v = +b.dataset.v; s.tiltJump = v > 0; if (v > 0) s.jumpSens = v; Save.save(); paint(); });
     $('sCal').onclick = () => { this.g.click(); Tilt.recenter(); $('sCal').textContent = Tilt.have ? 'Centred' : 'No sensor yet'; setTimeout(() => { const c = $('sCal'); if (c) c.textContent = 'Recenter now'; }, 1400); };
     paint();
     if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(rows);
