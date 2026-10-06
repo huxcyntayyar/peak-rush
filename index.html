@@ -270,6 +270,36 @@
   .switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .15s}
   .switch[aria-checked="true"]{background:var(--blue)} .switch[aria-checked="true"]::after{transform:translateX(22px)}
   #tiltMeter{position:absolute;left:50%;top:calc(38px + var(--st));width:120px;height:14px;margin-left:-60px;border-radius:7px;background:rgba(15,34,66,.28);pointer-events:none}
+  /* ---- body control (camera) */
+  #bodyHold{position:fixed;left:0;top:0;width:2px;height:2px;opacity:.01;overflow:hidden;pointer-events:none;z-index:-1}
+  .bodycal{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+  .bodycam{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#0f2242}
+  .bodycam video,#bodyPip video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .bodycam canvas,#bodyPip canvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
+  .bcwait{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:700 15px var(--body);text-align:center;padding:10px}
+  .bcwait[hidden]{display:none}
+  .bcmsg{margin:0 0 8px;font-weight:600;color:var(--ink);font-size:14px;line-height:1.35}
+  .bcmsg.err{color:var(--red)}
+  .bodylist{margin:0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}
+  .bodylist li{padding:4px 0;border-bottom:1px solid var(--line)} .bodylist b{color:var(--ink)}
+  #bodyPip{position:absolute;left:calc(18px + var(--sl));bottom:calc(18px + var(--sb));width:150px;height:112px;border-radius:12px;overflow:hidden;background:#0f2242;border:2px solid rgba(255,255,255,.8);box-shadow:0 6px 18px rgba(15,34,66,.35);pointer-events:none;z-index:6}
+  #bodyPip[hidden]{display:none}
+  #app.cine-on #bodyPip{opacity:.0}
+  .bpbar{position:absolute;left:50%;bottom:6px;width:96px;height:8px;margin-left:-48px;border-radius:4px;background:rgba(15,34,66,.55)}
+  .bpbar i{position:absolute;left:47px;top:0;width:2px;height:8px;background:rgba(255,255,255,.7)} .bpbar b{position:absolute;left:43px;top:0;width:10px;height:8px;border-radius:4px;background:#fff}
+  .bptuck{position:absolute;right:6px;top:6px;font:800 11px var(--display);letter-spacing:.06em;color:#fff;background:rgba(15,34,66,.55);border-radius:6px;padding:1px 6px;opacity:.55}
+  .bptuck.on{background:#ffc233;color:#0f2242;opacity:1}
+  .bpflash{position:absolute;left:0;right:0;top:36%;text-align:center;font:800 22px var(--display);color:#ffc233;text-shadow:0 2px 6px rgba(0,0,0,.5);opacity:0}
+  .bpflash.go{animation:bpf .6s ease-out}
+  @keyframes bpf{0%{opacity:1;transform:scale(1.25)}100%{opacity:0;transform:scale(1)}}
+  #bodyHint{position:absolute;left:50%;top:26%;transform:translateX(-50%);background:rgba(15,34,66,.82);color:#fff;font:700 17px var(--body);padding:8px 16px;border-radius:12px;z-index:7;white-space:nowrap;pointer-events:none}
+  #bodyHint[hidden]{display:none}
+  .workout{margin-top:10px;padding:10px 12px;border-radius:12px;background:#e9f6ef;border:1px solid rgba(21,154,87,.25)}
+  .wkhead{display:flex;align-items:baseline;gap:8px;font:800 16px var(--display);text-transform:uppercase;color:var(--green)} .wkhead small{font:600 12px var(--body);text-transform:none;color:var(--ink2)}
+  .wkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin:6px 0}
+  .wk{background:#fff;border-radius:10px;padding:5px 8px;text-align:center} .wk b{display:block;font:800 20px var(--display);color:var(--ink)} .wk span{font-size:11px;color:var(--ink2)}
+  .wktot{font-size:12px;color:var(--ink2)} .wktot b{color:var(--ink)} .wktot > span:first-child{font-weight:700;color:var(--ink)}
+  html.short .bodycal{gap:10px} html.short .bodylist{font-size:12px} html.short .bodylist li{padding:2px 0}
   #tiltMeter.jmp{animation:tjmp .5s ease-out}
   @keyframes tjmp{0%{background:rgba(255,194,51,.95);transform:translateY(-6px)}100%{background:rgba(15,34,66,.28);transform:none}}
   #tiltMeter .mid{position:absolute;left:59px;top:2px;width:2px;height:10px;background:rgba(255,255,255,.7)}
@@ -1072,10 +1102,12 @@ class Rider {
     this.vh += this.slip * Math.min(1, grip * dt);
     const dx = Math.sin(this.vh), dz = -Math.cos(this.vh);
 
-    const tuckWanted = !this.board && Math.abs(inp.steer) < 0.15 && !inp.brake && this.v > 13 ? 1 : 0;
+    // body control can ask for the tuck directly (squat = tuck); otherwise it comes on by itself on straight fast sections
+    const tuckWanted = inp.tuck != null ? (!this.board && !inp.brake && inp.tuck ? 1 : 0)
+      : (!this.board && Math.abs(inp.steer) < 0.15 && !inp.brake && this.v > 13 ? 1 : 0);
     this.tuck = damp(this.tuck, tuckWanted, 5, dt);
     this.brake = damp(this.brake, inp.brake ? 1 : 0, 10, dt);
-    this.crouch = damp(this.crouch, inp.brake ? 1 : this.tuck * 0.85, 8, dt);
+    this.crouch = damp(this.crouch, inp.brake ? 1 : Math.max(this.tuck * 0.85, inp.crouch || 0), 8, dt);
 
     const aG = -G * (gx * dx + gz * dz);
     const race = c.type === 'race', drag = (race ? 0.0022 : 0.0027) * (1 - 0.42 * this.tuck) / (this.stats.speed * this.stats.speed);
@@ -4199,7 +4231,7 @@ const I18N = {
     'Fast and stable at speed.': 'تیز رفتاری پر بھی مستحکم۔', 'Red race suit.': 'سرخ ریس سوٹ۔', 'Orange and black pro race suit.': 'نارنجی اور کالا پرو ریس سوٹ۔', 'Black race skis with orange edges.': 'نارنجی کناروں والی کالی ریس اسکیز۔', 'Blue shell, yellow helmet.': 'نیلی جیکٹ، پیلا ہیلمٹ۔',
     'Yellow jacket, plum pants.': 'پیلی جیکٹ، جامنی پتلون۔', 'Green jacket, white pants.': 'سبز جیکٹ، سفید پتلون۔',
     'Sound effects': 'صوتی اثرات', 'Music': 'موسیقی', 'On-screen buttons': 'اسکرین کے بٹن', 'Ghost of the best run (races)': 'بہترین رن کا گھوسٹ (ریس)',
-    'Jump by motion': 'موشن سے چھلانگ', 'Off': 'بند', 'Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.': 'فون ہاتھ میں پکڑ کر اوپر چھلانگ لگائیں، یا فون کو تیزی سے اوپر اٹھائیں، اسکیئر بھی چھلانگ لگائے گا۔', 'Steering sensitivity': 'اسٹیئرنگ کی حساسیت', 'Low': 'کم', 'Normal': 'عام', 'High': 'زیادہ', 'Graphics': 'گرافکس', 'Sharp + shadows': 'واضح + سائے', 'Full HD': 'فل ایچ ڈی', 'Sharp': 'واضح', 'Steering': 'اسٹیئرنگ', 'Touch': 'ٹچ', 'Motion (tilt)': 'موشن (جھکاؤ)', 'Tilt sensitivity': 'جھکاؤ کی حساسیت', 'Centre position': 'درمیانی پوزیشن', 'Recenter now': 'ابھی سینٹر کریں', 'Centred': 'سینٹر ہو گیا', 'No sensor yet': 'ابھی سینسر نہیں ملا', 'Recenter tilt': 'جھکاؤ سینٹر کریں', 'Tilt works only from your own game link. Touch steering is on.': 'جھکاؤ صرف آپ کے اپنے گیم لنک پر چلتا ہے۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Motion controls': 'موشن کنٹرولز', 'Use touch instead': 'ٹچ استعمال کریں', 'Allow motion': 'موشن کی اجازت دیں', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'پیک رش میں فون جھکا کر اسکیئر موڑا جاتا ہے۔ موشن کی اجازت دیں تاکہ گیم جھکاؤ پڑھ سکے۔', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': 'فون آرام سے لیٹا کر پکڑیں۔ کاؤنٹ ڈاؤن شروع ہونے پر یہی پوزیشن درمیان مانی جائے گی۔', 'No motion sensor found. Use the Left/Right buttons.': 'موشن سینسر نہیں ملا۔ بائیں/دائیں بٹن استعمال کریں۔', 'Motion access was not allowed. Touch steering is on.': 'موشن کی اجازت نہیں ملی۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Controls': 'کنٹرولز', 'Left/Right buttons': 'بائیں/دائیں بٹن', 'Exit': 'باہر نکلیں', 'Back': 'واپس', 'Weather': 'موسم', 'Clear': 'صاف', 'Snowfall': 'برفباری', 'Heavy Snow': 'شدید برفباری', 'Foggy': 'دھند', 'Windy': 'تیز ہوا', 'Fast': 'تیز',
+    "Body (camera)": "باڈی (کیمرا)", "TUCK": "ٹک", "Body control": "باڈی کنٹرول", "Body sensitivity": "باڈی کی حساسیت", "Motion control": "موشن کنٹرول", "Stand the phone up 2 to 3 metres away. Lean to turn, squat to go faster, jump to jump. The camera starts when a race begins.": "فون کو 2 سے 3 میٹر دور کھڑا کریں۔ مڑنے کے لیے جھکیں، تیز جانے کے لیے اسکواٹ کریں، چھلانگ کے لیے چھلانگ لگائیں۔ کیمرا ریس شروع ہونے پر چلے گا۔", "Starting camera": "کیمرا شروع ہو رہا ہے", "Loading body tracking": "باڈی ٹریکنگ لوڈ ہو رہی ہے", "Camera off": "کیمرا بند ہے", "The first time takes a few seconds.": "پہلی بار چند سیکنڈ لگتے ہیں۔", "Allow the camera when your phone asks.": "فون پوچھے تو کیمرے کی اجازت دیں۔", "Turn the phone sideways, stand it up, and step back until you can see yourself.": "فون کو لیٹا کر کھڑا کریں اور پیچھے ہٹیں یہاں تک کہ آپ خود کو دیکھ سکیں۔", "Stand the phone up and step back until you can see yourself from head to knees.": "فون کھڑا کریں اور پیچھے ہٹیں یہاں تک کہ سر سے گھٹنوں تک آپ نظر آئیں۔", "Step back a little more so your hips are in the picture.": "تھوڑا اور پیچھے ہٹیں تاکہ کولہے بھی تصویر میں آ جائیں۔", "Ready. Stand straight, tap Start, then step back into place. The race starts when the camera sees you.": "تیار۔ سیدھے کھڑے ہوں، اسٹارٹ دبائیں، پھر واپس اپنی جگہ آئیں۔ کیمرا آپ کو دیکھتے ہی ریس شروع ہو گی۔", "Hold still for a moment.": "ایک لمحہ ساکن رہیں۔", "Lean": "جھکیں", "left or right to turn": "بائیں یا دائیں مڑنے کے لیے", "Squat": "اسکواٹ", "to tuck and go faster": "جھک کر تیز جانے کے لیے", "Jump": "چھلانگ", "to jump": "چھلانگ لگانے کے لیے", "In the air": "ہوا میں", "jump again to flip, squat to grab, lean hard to spin": "فلپ کے لیے دوبارہ چھلانگ، گریب کے لیے اسکواٹ، اسپن کے لیے زور سے جھکیں", "Use touch instead": "ٹچ استعمال کریں", "Try again": "دوبارہ کوشش کریں", "Start": "شروع کریں", "The camera works only from your own game link (huxcyntayyar.github.io/peak-rush). Open it there in Safari or Chrome.": "کیمرا صرف آپ کے اپنے گیم لنک (huxcyntayyar.github.io/peak-rush) پر چلتا ہے۔ اسے Safari یا Chrome میں کھولیں۔", "Camera access was blocked. Allow the camera for this site in your browser settings, then tap Try again.": "کیمرے کی اجازت بند ہے۔ براؤزر کی سیٹنگز میں اس سائٹ کو کیمرا کی اجازت دیں، پھر دوبارہ کوشش کریں۔", "No camera was found, or another app is using it.": "کیمرا نہیں ملا، یا کوئی اور ایپ اسے استعمال کر رہی ہے۔", "Body tracking could not be downloaded. Check your internet connection and tap Try again.": "باڈی ٹریکنگ ڈاؤن لوڈ نہیں ہو سکی۔ انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔", "The camera could not start in this browser. Try Safari or Chrome.": "اس براؤزر میں کیمرا شروع نہیں ہو سکا۔ Safari یا Chrome آزمائیں۔", "Body control works only from your own game link (huxcyntayyar.github.io/peak-rush). Open it there and choose Body.": "باڈی کنٹرول صرف آپ کے اپنے گیم لنک (huxcyntayyar.github.io/peak-rush) پر چلتا ہے۔ وہاں کھول کر باڈی منتخب کریں۔", "Step into the camera view": "کیمرے کے سامنے آئیں", "Recenter body": "باڈی سینٹر کریں", "Workout": "ورزش", "Squats": "اسکواٹس", "Time in squat": "اسکواٹ میں وقت", "Jumps": "چھلانگیں", "Turns": "موڑ", "Active time": "فعال وقت", "All time": "اب تک کل", "squats": "اسکواٹس", "jumps": "چھلانگیں", "min active": "منٹ فعال", "runs": "ریس", 'Jump by motion': 'موشن سے چھلانگ', 'Off': 'بند', 'Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.': 'فون ہاتھ میں پکڑ کر اوپر چھلانگ لگائیں، یا فون کو تیزی سے اوپر اٹھائیں، اسکیئر بھی چھلانگ لگائے گا۔', 'Steering sensitivity': 'اسٹیئرنگ کی حساسیت', 'Low': 'کم', 'Normal': 'عام', 'High': 'زیادہ', 'Graphics': 'گرافکس', 'Sharp + shadows': 'واضح + سائے', 'Full HD': 'فل ایچ ڈی', 'Sharp': 'واضح', 'Steering': 'اسٹیئرنگ', 'Touch': 'ٹچ', 'Motion (tilt)': 'موشن (جھکاؤ)', 'Tilt sensitivity': 'جھکاؤ کی حساسیت', 'Centre position': 'درمیانی پوزیشن', 'Recenter now': 'ابھی سینٹر کریں', 'Centred': 'سینٹر ہو گیا', 'No sensor yet': 'ابھی سینسر نہیں ملا', 'Recenter tilt': 'جھکاؤ سینٹر کریں', 'Tilt works only from your own game link. Touch steering is on.': 'جھکاؤ صرف آپ کے اپنے گیم لنک پر چلتا ہے۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Motion controls': 'موشن کنٹرولز', 'Use touch instead': 'ٹچ استعمال کریں', 'Allow motion': 'موشن کی اجازت دیں', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'پیک رش میں فون جھکا کر اسکیئر موڑا جاتا ہے۔ موشن کی اجازت دیں تاکہ گیم جھکاؤ پڑھ سکے۔', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': 'فون آرام سے لیٹا کر پکڑیں۔ کاؤنٹ ڈاؤن شروع ہونے پر یہی پوزیشن درمیان مانی جائے گی۔', 'No motion sensor found. Use the Left/Right buttons.': 'موشن سینسر نہیں ملا۔ بائیں/دائیں بٹن استعمال کریں۔', 'Motion access was not allowed. Touch steering is on.': 'موشن کی اجازت نہیں ملی۔ ٹچ اسٹیئرنگ چالو ہے۔', 'Controls': 'کنٹرولز', 'Left/Right buttons': 'بائیں/دائیں بٹن', 'Exit': 'باہر نکلیں', 'Back': 'واپس', 'Weather': 'موسم', 'Clear': 'صاف', 'Snowfall': 'برفباری', 'Heavy Snow': 'شدید برفباری', 'Foggy': 'دھند', 'Windy': 'تیز ہوا', 'Fast': 'تیز',
     'Progress': 'پیش رفت', 'Reset progress': 'پیش رفت ختم کریں', 'Tap again to confirm': 'تصدیق کے لیے دوبارہ ٹیپ کریں', 'Progress reset': 'پیش رفت ختم ہو گئی',
     'Done': 'ٹھیک ہے', 'Language': 'زبان', 'Paused': 'رکا ہوا', 'Resume': 'جاری رکھیں', 'Restart': 'دوبارہ شروع', 'Quit to menu': 'مینو پر جائیں',
     'Gold': 'سونا', 'Silver': 'چاندی', 'Bronze': 'کانسی', 'gold': 'سونا', 'silver': 'چاندی', 'bronze': 'کانسی', 'No medal': 'کوئی تمغہ نہیں',
@@ -4252,7 +4284,7 @@ const I18N = {
     'Fast and stable at speed.': '高速下依然穩定。', 'Red race suit.': '紅色競賽服。', 'Orange and black pro race suit.': '橘黑職業競賽服。', 'Black race skis with orange edges.': '橘邊黑色競賽雪板。', 'Blue shell, yellow helmet.': '藍色外套，黃色頭盔。',
     'Yellow jacket, plum pants.': '黃色外套，紫紅長褲。', 'Green jacket, white pants.': '綠色外套，白色長褲。',
     'Sound effects': '音效', 'Music': '音樂', 'On-screen buttons': '螢幕按鈕', 'Ghost of the best run (races)': '最佳紀錄幽靈（競速）',
-    'Jump by motion': '體感跳躍', 'Off': '關閉', 'Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.': '手握手機往上跳，或快速把手機往上抬，滑雪者就會跳起來。', 'Steering sensitivity': '轉向靈敏度', 'Low': '低', 'Normal': '標準', 'High': '高', 'Graphics': '畫質', 'Sharp + shadows': '清晰＋陰影', 'Full HD': '全高清', 'Sharp': '清晰', 'Steering': '轉向方式', 'Touch': '觸控', 'Motion (tilt)': '體感（傾斜）', 'Tilt sensitivity': '傾斜靈敏度', 'Centre position': '中心位置', 'Recenter now': '立即校正', 'Centred': '已校正', 'No sensor yet': '尚未偵測到感測器', 'Recenter tilt': '校正傾斜', 'Tilt works only from your own game link. Touch steering is on.': '傾斜操作只能在你自己的遊戲連結使用，已改用觸控。', 'Motion controls': '體感操作', 'Use touch instead': '改用觸控', 'Allow motion': '允許動作感測', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'Peak Rush 透過傾斜手機來轉向。請允許動作感測，讓遊戲讀取傾斜角度。', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': '以舒適的姿勢橫握手機，倒數開始時的位置即為中心。', 'No motion sensor found. Use the Left/Right buttons.': '未偵測到動作感測器，請使用左右按鈕。', 'Motion access was not allowed. Touch steering is on.': '未允許動作感測，已改用觸控轉向。', 'Controls': '操作', 'Left/Right buttons': '左右按鈕', 'Exit': '離開', 'Back': '返回', 'Weather': '天氣', 'Clear': '晴朗', 'Snowfall': '降雪', 'Heavy Snow': '大雪', 'Foggy': '霧', 'Windy': '強風', 'Fast': '流暢',
+    "Body (camera)": "身體（鏡頭）", "TUCK": "壓低", "Body control": "身體操控", "Body sensitivity": "身體靈敏度", "Motion control": "體感操控", "Stand the phone up 2 to 3 metres away. Lean to turn, squat to go faster, jump to jump. The camera starts when a race begins.": "把手機立在 2 到 3 公尺外。身體傾斜來轉彎，蹲下加速，跳起來就跳躍。比賽開始時才會開啟鏡頭。", "Starting camera": "正在開啟鏡頭", "Loading body tracking": "正在載入身體追蹤", "Camera off": "鏡頭已關閉", "The first time takes a few seconds.": "第一次需要幾秒鐘。", "Allow the camera when your phone asks.": "手機詢問時請允許使用鏡頭。", "Turn the phone sideways, stand it up, and step back until you can see yourself.": "把手機橫放立起，往後退到能看見自己。", "Stand the phone up and step back until you can see yourself from head to knees.": "把手機立起，往後退到畫面能看到你從頭到膝蓋。", "Step back a little more so your hips are in the picture.": "再往後退一點，讓臀部也進入畫面。", "Ready. Stand straight, tap Start, then step back into place. The race starts when the camera sees you.": "準備好了。站直，點「開始」，再退回原位。鏡頭看到你時比賽就會開始。", "Hold still for a moment.": "請保持不動一下。", "Lean": "傾斜", "left or right to turn": "向左或向右轉彎", "Squat": "蹲下", "to tuck and go faster": "壓低身體加速", "Jump": "跳躍", "to jump": "跳起來", "In the air": "在空中", "jump again to flip, squat to grab, lean hard to spin": "再跳一次翻轉，蹲下抓板，用力傾斜旋轉", "Use touch instead": "改用觸控", "Try again": "再試一次", "Start": "開始", "The camera works only from your own game link (huxcyntayyar.github.io/peak-rush). Open it there in Safari or Chrome.": "鏡頭只能在你自己的遊戲連結（huxcyntayyar.github.io/peak-rush）使用，請用 Safari 或 Chrome 開啟。", "Camera access was blocked. Allow the camera for this site in your browser settings, then tap Try again.": "鏡頭權限被封鎖。請在瀏覽器設定中允許此網站使用鏡頭，再點「再試一次」。", "No camera was found, or another app is using it.": "找不到鏡頭，或鏡頭正被其他應用程式使用。", "Body tracking could not be downloaded. Check your internet connection and tap Try again.": "無法下載身體追蹤。請檢查網路後點「再試一次」。", "The camera could not start in this browser. Try Safari or Chrome.": "此瀏覽器無法開啟鏡頭，請改用 Safari 或 Chrome。", "Body control works only from your own game link (huxcyntayyar.github.io/peak-rush). Open it there and choose Body.": "身體操控只能在你自己的遊戲連結（huxcyntayyar.github.io/peak-rush）使用，請在那裡開啟並選擇「身體」。", "Step into the camera view": "請走進鏡頭畫面", "Recenter body": "重新校正身體", "Workout": "運動量", "Squats": "深蹲", "Time in squat": "深蹲時間", "Jumps": "跳躍", "Turns": "轉彎", "Active time": "活動時間", "All time": "累計", "squats": "次深蹲", "jumps": "次跳躍", "min active": "分鐘活動", "runs": "場比賽", 'Jump by motion': '體感跳躍', 'Off': '關閉', 'Jump up with the phone in your hands, or lift it up quickly, and the skier jumps.': '手握手機往上跳，或快速把手機往上抬，滑雪者就會跳起來。', 'Steering sensitivity': '轉向靈敏度', 'Low': '低', 'Normal': '標準', 'High': '高', 'Graphics': '畫質', 'Sharp + shadows': '清晰＋陰影', 'Full HD': '全高清', 'Sharp': '清晰', 'Steering': '轉向方式', 'Touch': '觸控', 'Motion (tilt)': '體感（傾斜）', 'Tilt sensitivity': '傾斜靈敏度', 'Centre position': '中心位置', 'Recenter now': '立即校正', 'Centred': '已校正', 'No sensor yet': '尚未偵測到感測器', 'Recenter tilt': '校正傾斜', 'Tilt works only from your own game link. Touch steering is on.': '傾斜操作只能在你自己的遊戲連結使用，已改用觸控。', 'Motion controls': '體感操作', 'Use touch instead': '改用觸控', 'Allow motion': '允許動作感測', 'Peak Rush steers by tilting your phone. Allow motion access so the game can read the tilt.': 'Peak Rush 透過傾斜手機來轉向。請允許動作感測，讓遊戲讀取傾斜角度。', 'Hold the phone comfortably in landscape. That position becomes the centre when the countdown starts.': '以舒適的姿勢橫握手機，倒數開始時的位置即為中心。', 'No motion sensor found. Use the Left/Right buttons.': '未偵測到動作感測器，請使用左右按鈕。', 'Motion access was not allowed. Touch steering is on.': '未允許動作感測，已改用觸控轉向。', 'Controls': '操作', 'Left/Right buttons': '左右按鈕', 'Exit': '離開', 'Back': '返回', 'Weather': '天氣', 'Clear': '晴朗', 'Snowfall': '降雪', 'Heavy Snow': '大雪', 'Foggy': '霧', 'Windy': '強風', 'Fast': '流暢',
     'Progress': '進度', 'Reset progress': '重設進度', 'Tap again to confirm': '再點一次確認', 'Progress reset': '進度已重設',
     'Done': '完成', 'Language': '語言', 'Paused': '已暫停', 'Resume': '繼續', 'Restart': '重新開始', 'Quit to menu': '回到選單',
     'Gold': '金牌', 'Silver': '銀牌', 'Bronze': '銅牌', 'gold': '金牌', 'silver': '銀牌', 'bronze': '銅牌', 'No medal': '未獲獎牌',
@@ -5565,6 +5597,476 @@ Object.assign(UI, {
   // HUD tilt meter
   const m = document.createElement('div'); m.id = 'tiltMeter'; m.hidden = true; m.innerHTML = '<i class="mid"></i><b id="tiltDot"></b>';
   const hud = $('hud'); if (hud) hud.appendChild(m);
+})();
+
+// ===================================================================
+// BODY CONTROL (camera)
+// The front camera watches the player and MediaPipe Pose finds the
+// shoulders, hips, knees and ankles. Then:
+//   lean left / right  -> turn
+//   squat              -> tuck (less drag, more speed); in the air: grab
+//   jump               -> jump; in the air: flip
+//   big lean in the air (freestyle) -> spin
+// Everything runs in the browser; no video leaves the phone.
+//
+// WORKOUT: every run in Body or Motion mode is counted (squats, time in
+// squat, jumps, turns, active time) and shown after the race, with
+// all-time totals saved on the phone.
+// ===================================================================
+const MP_VER = '1.0.1';
+const MP_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER;
+const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const SKEL = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28]];
+
+const BodyCam = {
+  state: 'off', why: '', stage: '', video: null, stream: null, det: null,
+  seen: false, lastSeen: 0, sm: null, lm: null, base: null, fullBody: false,
+  steer: 0, lean: 0, depth: 0, squat: false, knee: null, vy: 0,
+  jumpQ: 0, jumpCool: 0, spinArm: true, spinQ: 0, lastDet: 0, lastVT: -1,
+  enabled() { return Save.data.settings.steer === 'camera'; },
+  sens() { return Save.data.settings.bodySens || 1; },
+  framed() { try { return window.self !== window.top; } catch (e) { return true; } },
+
+  // ---------------- camera + model
+  holder() {
+    let h = $('bodyHold');
+    if (!h) { h = document.createElement('div'); h.id = 'bodyHold'; document.body.appendChild(h); }
+    return h;
+  },
+  start() {
+    if (this.state === 'ready') return Promise.resolve(true);
+    if (this.starting) return this.starting;
+    this.starting = (async () => {
+      this.state = 'starting'; this.why = ''; this.stage = 'camera'; this.onStage && this.onStage();
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { const e = new Error('no getUserMedia'); e.code = this.framed() ? 'framed' : 'nocam'; throw e; }
+        this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } }, audio: false });
+        let v = this.video;
+        if (!v) { v = this.video = document.createElement('video'); v.id = 'bodyVid'; v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', ''); this.holder().appendChild(v); }
+        v.srcObject = this.stream;
+        await v.play().catch(() => {});
+        this.stage = 'model'; this.onStage && this.onStage();
+        if (!this.det) {
+          const mp = await import(MP_URL + '/vision_bundle.mjs');
+          const files = await mp.FilesetResolver.forVisionTasks(MP_URL + '/wasm');
+          const opts = d => ({ baseOptions: { modelAssetPath: MP_MODEL, delegate: d }, runningMode: 'VIDEO', numPoses: 1,
+            minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
+          try { this.det = await mp.PoseLandmarker.createFromOptions(files, opts('GPU')); }
+          catch (e) { console.warn('GPU pose failed, using CPU', e); this.det = await mp.PoseLandmarker.createFromOptions(files, opts('CPU')); }
+        }
+        this.state = 'ready'; this.stage = ''; this.seen = false; this.sm = null;
+        this.loop(); this.onStage && this.onStage();
+        return true;
+      } catch (e) {
+        console.error(e);
+        const st = this.stage; this.stop(); this.state = 'error';
+        const n = e && e.name;
+        this.why = e.code || (n === 'NotAllowedError' || n === 'SecurityError' ? (this.framed() ? 'framed' : 'denied')
+          : n === 'NotFoundError' || n === 'OverconstrainedError' || n === 'NotReadableError' ? 'nocam' : st === 'model' ? 'model' : 'error');
+        this.onStage && this.onStage();
+        return false;
+      } finally { this.starting = null; }
+    })();
+    return this.starting;
+  },
+  stop() {
+    if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+    if (this.video) this.video.srcObject = null;
+    if (this.state === 'ready' || this.state === 'starting') this.state = 'off';
+    this.seen = false; this.sm = null; this.steer = 0; this.squat = false;
+  },
+  // only spend battery on tracking while it matters
+  active() {
+    const m = Game.mode;
+    return this.calibrating || m === 'countdown' || m === 'play';
+  },
+  loop() {
+    if (this.looping) return; this.looping = true;
+    const tick = () => {
+      if (this.state !== 'ready') { this.looping = false; return; }
+      const v = this.video, now = performance.now();
+      if (this.active() && v && v.readyState >= 2 && v.currentTime !== this.lastVT && now - this.lastDet > 38) {
+        this.lastVT = v.currentTime; this.lastDet = now;
+        let res = null;
+        try { res = this.det.detectForVideo(v, now); } catch (e) { console.error(e); }
+        this.onPose(res && res.landmarks && res.landmarks[0], now);
+      } else if (!this.active()) { this.seen = false; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  },
+
+  // ---------------- pose -> controls
+  onPose(lm, now) {
+    const v = this.video || {}, asp = (v.videoWidth || 4) / (v.videoHeight || 3);
+    const vis = i => lm && lm[i] && (lm[i].visibility == null || lm[i].visibility > 0.5) && lm[i].y < 1.02;
+    this.lm = lm || null;
+    if (!lm || !vis(11) || !vis(12)) {
+      if (now - this.lastSeen > 450) { this.seen = false; this.steer *= 0.8; this.squat = false; }
+      this.draw(); return;
+    }
+    const P = i => ({ x: lm[i].x * asp, y: lm[i].y });
+    const ls = P(11), rs = P(12);
+    const sh = { x: (ls.x + rs.x) / 2, y: (ls.y + rs.y) / 2 }, sw = Math.max(0.02, Math.hypot(ls.x - rs.x, ls.y - rs.y));
+    const hipOk = vis(23) && vis(24);
+    const hip = hipOk ? { x: (P(23).x + P(24).x) / 2, y: (P(23).y + P(24).y) / 2 } : null;
+    // knee bend from whichever leg is seen best
+    let knee = null;
+    for (const [h, k, a] of [[23, 25, 27], [24, 26, 28]]) {
+      if (!(vis(h) && vis(k) && vis(a))) continue;
+      const H = P(h), K = P(k), A = P(a);
+      const u = { x: H.x - K.x, y: H.y - K.y }, w = { x: A.x - K.x, y: A.y - K.y };
+      const ang = Math.acos(clamp((u.x * w.x + u.y * w.y) / (Math.hypot(u.x, u.y) * Math.hypot(w.x, w.y) || 1), -1, 1)) * 180 / Math.PI;
+      const flex = 180 - ang; knee = knee == null ? flex : Math.max(knee, flex);
+    }
+    const dt = clamp((now - (this.lastSeen || now)) / 1000, 0.016, 0.25);
+    this.seen = true; this.lastSeen = now; this.fullBody = knee != null;
+    const k = 1 - Math.exp(-dt / 0.05);
+    let s = this.sm;
+    if (!s) s = this.sm = { x: sh.x, y: sh.y, sw, hx: hip ? hip.x : sh.x, hy: hip ? hip.y : sh.y + sw * 1.5, knee: knee || 0 };
+    const py = s.y;
+    s.x += (sh.x - s.x) * k; s.y += (sh.y - s.y) * k; s.sw += (sw - s.sw) * k;
+    if (hip) { s.hx += (hip.x - s.hx) * k; s.hy += (hip.y - s.hy) * k; }
+    s.hip = hipOk; if (knee != null) s.knee += (knee - s.knee) * k; this.knee = knee != null ? s.knee : null;
+    this.vy = (py - s.y) / dt;                       // rising = positive
+    if (!this.base || this.calibrating) this.capture(dt);
+    this.measure(dt, now);
+    this.draw();
+  },
+  rawLean(s) {
+    // user's right shows on the image's left (the camera faces them), so right lean = positive
+    if (s.hip) return Math.atan2(-(s.x - s.hx), Math.max(0.01, s.hy - s.y)) * 180 / Math.PI;
+    return this.base ? -(s.x - this.base.x) / s.sw * 30 : 0;
+  },
+  // standing still: take this as neutral (blends, so a wobble does not matter)
+  capture(dt, tau) {
+    const s = this.sm; if (!s) return;
+    const torso = s.hip ? Math.hypot(s.x - s.hx, s.y - s.hy) : s.sw * 1.5;
+    const nb = { x: s.x, y: s.y, sw: s.sw, torso, lean: s.hip ? this.rawLean(s) : 0, hip: s.hip };
+    if (!this.base || this.base.hip !== nb.hip) { this.base = nb; return; }
+    if (Math.abs(this.vy) > nb.torso * 0.6) return;            // moving: wait
+    const a = 1 - Math.exp(-dt / (tau || 0.35)), b = this.base;
+    for (const key of ['x', 'y', 'sw', 'torso', 'lean']) b[key] += (nb[key] - b[key]) * a;
+  },
+  measure(dt, now) {
+    const s = this.sm, b = this.base, sens = this.sens();
+    if (!b) return;
+    const T = b.torso * (s.sw / b.sw);                        // follows the player stepping closer or further
+    // ---- lean -> steer
+    let lean = this.rawLean(s) - (s.hip === b.hip ? b.lean : 0);
+    this.lean = lean;
+    const dead = 4, full = 19 / sens;
+    let st = clamp((Math.abs(lean) - dead) / (full - dead), 0, 1);
+    st = Math.pow(st, 1.15) * Math.sign(lean);
+    this.steer += (st - this.steer) * (1 - Math.exp(-dt / 0.07));
+    if (Math.abs(this.steer) < 0.35) this.spinArm = true;
+    else if (this.spinArm && Math.abs(this.steer) > 0.8) { this.spinArm = false; this.spinQ = Math.sign(this.steer); this.spinT = now; }
+    // ---- squat: knee bend when the legs are seen, otherwise how far the shoulders dropped
+    const drop = (s.y - b.y) / T;
+    let depth;
+    if (this.knee != null) depth = clamp((this.knee - 12) / 70, 0, 1.2);
+    else depth = clamp(drop / 0.55, 0, 1.2);
+    this.depth = depth;
+    const on = 0.33 / sens, off = 0.2 / sens;
+    const was = this.squat;
+    if (!this.squat && depth > on) this.squat = true;
+    else if (this.squat && depth < off) this.squat = false;
+    if (this.squat && !was) Workout.add('squats', 1);
+    // ---- jump: shoulders rise clearly above standing height, quickly
+    const rise = -drop;
+    if (now > this.jumpCool && rise > 0.12 / sens && this.vy / T > 0.7) {
+      this.jumpQ = now; this.jumpCool = now + 750; Workout.add('jumps', 1); this.flash('JUMP');
+    }
+    // slowly follow the standing position (the player drifts, the phone gets nudged)
+    if (!this.calibrating && !this.squat && Math.abs(drop) < 0.07 && Math.abs(lean) < 6 && Math.abs(this.vy) < T * 0.3) this.capture(dt, 5);
+  },
+  takeJump() { if (!this.jumpQ) return false; const f = performance.now() - this.jumpQ < 300; this.jumpQ = 0; return f; },
+  takeSpin() { if (!this.spinQ) return 0; const d = performance.now() - (this.spinT || 0) < 300 ? this.spinQ : 0; this.spinQ = 0; return d; },
+  recenter() { this.base = null; },
+
+  // ---------------- drawing (preview + skeleton)
+  draw() {
+    for (const id of ['bcCanvas', 'bpCanvas']) {
+      const c = $(id); if (!c || !c.offsetParent) continue;
+      const W = c.clientWidth, H = c.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+      if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+      const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+      const lm = this.lm, v = this.video; if (!lm || !v || !v.videoWidth) continue;
+      // same crop as object-fit: cover
+      const sc = Math.max(W / v.videoWidth, H / v.videoHeight), ox = (W - v.videoWidth * sc) / 2, oy = (H - v.videoHeight * sc) / 2;
+      const X = i => ox + lm[i].x * v.videoWidth * sc, Y = i => oy + lm[i].y * v.videoHeight * sc;
+      const ok = i => lm[i] && (lm[i].visibility == null || lm[i].visibility > 0.5);
+      g.lineCap = 'round'; g.lineWidth = id === 'bcCanvas' ? 4 : 2.5;
+      g.strokeStyle = this.squat ? '#ffc233' : '#ffffff';
+      for (const [a, b] of SKEL) if (ok(a) && ok(b)) { g.beginPath(); g.moveTo(X(a), Y(a)); g.lineTo(X(b), Y(b)); g.stroke(); }
+      g.fillStyle = '#f26b1d';
+      for (const i of [0, 11, 12, 23, 24, 25, 26, 27, 28]) if (ok(i)) { g.beginPath(); g.arc(X(i), Y(i), id === 'bcCanvas' ? 4.5 : 3, 0, 6.29); g.fill(); }
+    }
+    const bar = $('bpSteer'); if (bar) bar.style.transform = 'translateX(' + (this.steer * 40).toFixed(1) + 'px)';
+    const tk = $('bpTuck'); if (tk) tk.classList.toggle('on', this.squat);
+  },
+  flash(t) {
+    const f = $('bpFlash'); if (!f) return;
+    f.textContent = t; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+  },
+  // move the one video element where it should be seen
+  mount(where) {
+    const v = this.video; if (!v) return;
+    const box = where ? $(where) : this.holder();
+    if (box && v.parentNode !== box) box.insertBefore(v, box.firstChild);
+  },
+};
+
+// ===================================================================
+// WORKOUT COUNTER
+// ===================================================================
+const Workout = {
+  cur: null,
+  begin(mode) { this.cur = mode ? { mode, squats: 0, squatT: 0, jumps: 0, turns: 0, activeT: 0, side: 0 } : null; },
+  add(k, n) { if (this.cur && Game.mode === 'play') this.cur[k] += n; },
+  tick(dt) {
+    const c = this.cur; if (!c || Game.mode !== 'play') return;
+    if (c.mode === 'camera') {
+      if (!BodyCam.seen) return;
+      c.activeT += dt;
+      if (BodyCam.squat) c.squatT += dt;
+      const sd = BodyCam.steer > 0.5 ? 1 : BodyCam.steer < -0.5 ? -1 : 0;
+      if (sd && sd !== c.side) { if (c.side) c.turns++; c.side = sd; }
+    } else c.activeT += dt;
+  },
+  // add this run to the all-time totals (once)
+  close() {
+    const c = this.cur; if (!c || c.closed) return c;
+    c.closed = true;
+    const t = Save.data.workout || (Save.data.workout = { runs: 0, squats: 0, squatT: 0, jumps: 0, turns: 0, activeT: 0 });
+    t.runs++; for (const k of ['squats', 'squatT', 'jumps', 'turns', 'activeT']) t[k] = (t[k] || 0) + c[k];
+    Save.save();
+    return c;
+  },
+  html() {
+    const c = this.cur; if (!c || !c.closed) return '';
+    const t = Save.data.workout || {};
+    const sec = x => x < 60 ? Math.round(x) + ' s' : Math.floor(x / 60) + ' min ' + String(Math.round(x % 60)).padStart(2, '0') + ' s';
+    const cell = (v, l) => '<div class="wk"><b>' + v + '</b><span>' + l + '</span></div>';
+    const cam = c.mode === 'camera';
+    const cells = cam
+      ? cell(c.squats, 'Squats') + cell(sec(c.squatT), 'Time in squat') + cell(c.jumps, 'Jumps') + cell(c.turns, 'Turns') + cell(sec(c.activeT), 'Active time')
+      : cell(c.jumps, 'Jumps') + cell(sec(c.activeT), 'Active time');
+    const tot = (cam || t.squats ? '<b>' + (t.squats || 0) + '</b> <span>squats</span> · ' : '') + '<b>' + (t.jumps || 0) + '</b> <span>jumps</span> · <b>' + Math.round((t.activeT || 0) / 60) + '</b> <span>min active</span> · <b>' + (t.runs || 0) + '</b> <span>runs</span>';
+    return '<div class="workout"><div class="wkhead"><span>Workout</span><small>' + (cam ? 'Body control' : 'Motion control') + '</small></div><div class="wkgrid">' + cells + '</div><div class="wktot"><span>All time</span> ' + tot + '</div></div>';
+  },
+  // put the card into whatever results sheet is open
+  inject() {
+    const h = this.html(); if (!h) return;
+    const sh = $('sheet'); if (!sh || sh.querySelector('.workout')) return;
+    const d = document.createElement('div'); d.innerHTML = h; const el = d.firstChild;
+    const after = sh.querySelector('.grid2');
+    const at = sh.querySelector('.reward') || sh.querySelector('.btnrow');
+    if (after) after.after(el); else if (at) at.before(el); else sh.appendChild(el);
+    if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(el);
+  },
+};
+
+// ===================================================================
+// UI: camera setup sheet, settings rows, in-race preview
+// ===================================================================
+Object.assign(UI, {
+  bodySheet(go) {
+    const cancel = () => { BodyCam.calibrating = false; BodyCam.onStage = null; BodyCam.mount(null); clearInterval(this.bcT); };
+    this.openSheet('<h2>Body control</h2>' +
+      '<div class="bodycal"><div class="bodycam" id="bcCam"><canvas id="bcCanvas"></canvas><div class="bcwait" id="bcWait">Starting camera</div></div>' +
+      '<div class="bodyhelp"><p class="bcmsg" id="bcMsg"></p><ul class="bodylist">' +
+      '<li><b>Lean</b> <span>left or right to turn</span></li><li><b>Squat</b> <span>to tuck and go faster</span></li><li><b>Jump</b> <span>to jump</span></li>' +
+      '<li><b>In the air</b> <span>jump again to flip, squat to grab, lean hard to spin</span></li></ul></div></div>' +
+      '<div class="btnrow"><button class="btn ghost" id="bcTouch">Use touch instead</button><button class="btn ghost" id="bcRetry" hidden>Try again</button><button class="btn primary" id="bcGo" disabled>Start</button></div>');
+    BodyCam.calibrating = true;
+    const msg = (t, err) => { const m = $('bcMsg'); if (!m) return; if (m.textContent !== t) { m.textContent = t; m.classList.toggle('err', !!err); if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(m); } };
+    const wait = t => { const w = $('bcWait'); if (!w) return; w.hidden = !t; if (t && w.textContent !== t) { w.textContent = t; if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(w); } };
+    const ERR = {
+      framed: 'The camera works only from your own game link (huxcyntayyar.github.io/peak-rush). Open it there in Safari or Chrome.',
+      denied: 'Camera access was blocked. Allow the camera for this site in your browser settings, then tap Try again.',
+      nocam: 'No camera was found, or another app is using it.',
+      model: 'Body tracking could not be downloaded. Check your internet connection and tap Try again.',
+      error: 'The camera could not start in this browser. Try Safari or Chrome.',
+    };
+    let goodT = 0;
+    const paint = () => {
+      const st = BodyCam.state;
+      $('bcRetry').hidden = st !== 'error';
+      if (st === 'error') { wait('Camera off'); msg(ERR[BodyCam.why] || ERR.error, true); $('bcGo').disabled = true; return; }
+      if (st === 'starting') { wait(BodyCam.stage === 'model' ? 'Loading body tracking' : 'Starting camera'); msg(BodyCam.stage === 'model' ? 'The first time takes a few seconds.' : 'Allow the camera when your phone asks.'); return; }
+      if (st !== 'ready') return;
+      BodyCam.mount('bcCam'); wait('');
+      const rot = document.documentElement.classList.contains('rot');
+      if (!BodyCam.seen) { goodT = 0; msg(rot ? 'Turn the phone sideways, stand it up, and step back until you can see yourself.' : 'Stand the phone up and step back until you can see yourself from head to knees.'); $('bcGo').disabled = true; return; }
+      $('bcGo').disabled = false;
+      if (!BodyCam.sm.hip) { goodT = 0; msg('Step back a little more so your hips are in the picture.'); return; }
+      goodT += 0.2;
+      msg(goodT > 1 ? 'Ready. Stand straight, tap Start, then step back into place. The race starts when the camera sees you.' : 'Hold still for a moment.');
+    };
+    BodyCam.onStage = paint;
+    this.bcT = setInterval(paint, 200);
+    $('bcTouch').onclick = () => { this.g.click(); cancel(); Save.data.settings.steer = 'touch'; Save.save(); BodyCam.stop(); this.closeSheet(); go(); };
+    $('bcRetry').onclick = () => { this.g.click(); BodyCam.state = 'off'; BodyCam.start(); paint(); };
+    $('bcGo').onclick = () => { this.g.click(); cancel(); this.closeSheet(); go(); };
+    BodyCam.start().then(paint);
+    paint();
+    if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply($('sheet'));
+  },
+});
+
+(function hookBody() {
+  // in-race preview: small mirrored camera picture with the skeleton, a steering bar and a TUCK light
+  const pip = document.createElement('div'); pip.id = 'bodyPip'; pip.hidden = true;
+  pip.innerHTML = '<canvas id="bpCanvas"></canvas><div class="bpbar"><i></i><b id="bpSteer"></b></div><span class="bptuck" id="bpTuck">TUCK</span><span class="bpflash" id="bpFlash"></span>';
+  const app = $('app'); if (app) app.appendChild(pip);
+  const hint = document.createElement('div'); hint.id = 'bodyHint'; hint.hidden = true; hint.textContent = 'Step into the camera view';
+  if (app) app.appendChild(hint);
+
+  // ---- input
+  const fr = Input.prototype.frame;
+  Input.prototype.frame = function (dt, r) {
+    const o = fr.call(this, dt, r);
+    o.tuck = undefined; o.crouch = undefined;
+    if (!BodyCam.enabled() || BodyCam.state !== 'ready') return o;
+    const touch = o.steer, seen = BodyCam.seen;
+    o.steer = clamp(Math.abs(touch) > 0.05 ? touch + BodyCam.steer * 0.5 : (seen ? BodyCam.steer : 0), -1, 1);
+    const sq = seen && BodyCam.squat;
+    if (r && r.air) {
+      if (sq) o.grab = true;
+      if (BodyCam.takeJump()) o.flip = true;
+      const sp = BodyCam.takeSpin();
+      if (sp && Game.course && Game.course.type !== 'race' && !o.spinDir) { o.spinDir = sp; this.stats.spins++; }
+    } else {
+      BodyCam.takeSpin();
+      if (BodyCam.takeJump() && !o.jump) { o.jump = true; this.stats.jumps++; }
+      o.tuck = sq ? 1 : 0; o.crouch = sq ? 0.9 : 0;
+    }
+    return o;
+  };
+  // physical jumps in Motion mode count for the workout too
+  if (typeof Tilt !== 'undefined') {
+    const tj = Tilt.takeJump;
+    Tilt.takeJump = function () { const j = tj.call(this); if (j) Workout.add('jumps', 1); return j; };
+  }
+
+  // ---- buttons + preview visibility
+  const st = Game.syncTouch;
+  Game.syncTouch = function (...a) {
+    st.apply(this, a);
+    const on = BodyCam.enabled() && BodyCam.state === 'ready';
+    const racing = this.mode === 'play' || this.mode === 'countdown';
+    if (on) { $('bL').hidden = true; $('bR').hidden = true; }
+    pip.hidden = !(on && racing);
+    if (on && racing) BodyCam.mount('bodyPip'); else if (!BodyCam.calibrating) BodyCam.mount(null);
+    if (!(on && racing)) hint.hidden = true;
+  };
+
+  // ---- before a race: make sure the camera is running
+  const gate = (fn, self, args) => {
+    if (BodyCam.enabled() && BodyCam.state !== 'ready') { UI.bodySheet(() => fn.apply(self, args)); return; }
+    return fn.apply(self, args);
+  };
+  const sr = Game.startRun, stt = Game.startTutorial;
+  Game.startRun = function (...a) { return gate(sr, this, a); };
+  if (stt) Game.startTutorial = function (...a) { return gate(stt, this, a); };
+
+  // ---- countdown: start the workout, re-learn standing position, wait for the player to be in view
+  const bc = Game.beginCountdown;
+  Game.beginCountdown = function (...a) {
+    const mode = BodyCam.enabled() && BodyCam.state === 'ready' ? 'camera' : (typeof Tilt !== 'undefined' && Tilt.enabled() ? 'motion' : null);
+    Workout.begin(this.runEv === 'tutorial' ? null : mode);
+    this.bodyHeld = false; BodyCam.jumpQ = 0; BodyCam.spinQ = 0;
+    const r = bc.apply(this, a); this.syncTouch(); return r;
+  };
+  const up = Game.update;
+  Game.update = function (dt) {
+    const camOn = BodyCam.enabled() && BodyCam.state === 'ready';
+    if (camOn && this.mode === 'countdown' && !(this.cine && this.cine.phase === 'intro')) {
+      if (!BodyCam.seen) {
+        this.cd = 0; this.cdN = 3;
+        if (!this.bodyHeld) { this.bodyHeld = true; hint.hidden = false; if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(hint); }
+      } else if (this.bodyHeld) {
+        this.bodyHeld = false; hint.hidden = true; UI.count('3'); this.sound.play('count');
+      }
+      if (BodyCam.seen && !BodyCam.squat) BodyCam.capture(dt, 0.5);   // stand straight during the countdown = neutral
+    }
+    if (camOn && this.mode === 'play') {
+      // lost the player mid-run: say so (steering already goes to zero)
+      const lost = !BodyCam.seen;
+      if (lost !== !hint.hidden) hint.hidden = !lost;
+    }
+    up.call(this, dt);
+    if (this.mode === 'play') Workout.tick(dt);
+  };
+  const fin = Game.finish;
+  Game.finish = function (...a) { const r = fin.apply(this, a); Workout.close(); hint.hidden = true; this.syncTouch(); return r; };
+
+  // ---- results: add the workout card
+  const res = UI.results;
+  UI.results = function (...a) { const r = res.apply(this, a); try { Workout.inject(); } catch (e) { console.error(e); } return r; };
+  const ge = UI.gamesEvent;
+  if (ge) UI.gamesEvent = function (...a) { const r = ge.apply(this, a); try { Workout.inject(); } catch (e) { console.error(e); } return r; };
+
+  // ---- camera off when leaving racing, or when the app goes to the background
+  const lm = Game.loadMenu;
+  Game.loadMenu = function (...a) { BodyCam.stop(); return lm.apply(this, a); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden && BodyCam.state === 'ready') BodyCam.stop(); });
+  const rs = Game.resume;
+  Game.resume = function (...a) {
+    if (BodyCam.enabled() && BodyCam.state !== 'ready') BodyCam.start().then(() => this.syncTouch());
+    return rs.apply(this, a);
+  };
+
+  // ---- settings: third steering choice + sensitivity
+  const se = UI.settings;
+  UI.settings = function (fromPause) {
+    se.call(this, fromPause);
+    const s = Save.data.settings, seg = $('sSteer'); if (!seg) return;
+    const b = document.createElement('button'); b.dataset.v = 'camera'; b.textContent = 'Body (camera)';
+    seg.appendChild(b);
+    const row = document.createElement('div'); row.className = 'row'; row.id = 'sBodyRow';
+    row.innerHTML = '<label>Body sensitivity</label><div class="seg" id="sBody">' + [['0.75', 'Low'], ['1', 'Normal'], ['1.35', 'High']].map(([v, n]) => '<button data-v="' + v + '">' + n + '</button>').join('') + '</div>';
+    const tip = document.createElement('p'); tip.className = 'sheetsub'; tip.id = 'sBodyTip'; tip.style.margin = '-4px 0 6px';
+    tip.textContent = 'Stand the phone up 2 to 3 metres away. Lean to turn, squat to go faster, jump to jump. The camera starts when a race begins.';
+    const msgEl = $('sSteerMsg') || seg.closest('.row');
+    msgEl.after(row); row.after(tip);
+    const paint = () => {
+      const v = s.steer === 'camera' ? 'camera' : s.steer === 'motion' ? 'motion' : 'touch';
+      seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === v)));
+      $('sBody').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.v === (s.bodySens || 1))));
+      const cam = v === 'camera';
+      row.hidden = !cam; tip.hidden = !cam;
+      const lr = $('sLR') && $('sLR').closest('.row'); if (lr) lr.style.opacity = v === 'touch' ? 1 : 0.45;
+    };
+    b.onclick = () => {
+      this.g.click();
+      const m = $('sSteerMsg'); if (m) { m.hidden = true; m.textContent = ''; }
+      if (BodyCam.framed()) { if (m) { m.textContent = 'Body control works only from your own game link (huxcyntayyar.github.io/peak-rush). Open it there and choose Body.'; m.hidden = false; if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(m); } return; }
+      s.steer = 'camera'; Save.save();
+      ['sTiltRow', 'sCalRow', 'sJumpRow', 'sJumpTip'].forEach(id => { const e = $(id); if (e) e.hidden = true; });
+      paint(); this.g.syncTouch();
+    };
+    // the other two buttons keep their own handlers; repaint after them and turn the camera off
+    seg.addEventListener('click', e => {
+      const t = e.target.closest('button'); if (!t || t === b) return;
+      setTimeout(() => { if (!BodyCam.enabled()) BodyCam.stop(); paint(); }, 0);
+    });
+    $('sBody').querySelectorAll('button').forEach(x => x.onclick = () => { this.g.click(); s.bodySens = +x.dataset.v; Save.save(); paint(); });
+    paint();
+    if (s.steer === 'camera') ['sTiltRow', 'sCalRow', 'sJumpRow', 'sJumpTip'].forEach(id => { const e = $(id); if (e) e.hidden = true; });
+    if (typeof I18n !== 'undefined' && LANG !== 'en') { I18n.apply(seg); I18n.apply(row); I18n.apply(tip); }
+  };
+  // pause menu: re-learn the standing position
+  const ps = UI.pauseSheet;
+  UI.pauseSheet = function (...a) {
+    ps.apply(this, a);
+    if (!BodyCam.enabled() || !$('pQuit')) return;
+    const b = document.createElement('button'); b.className = 'btn ghost'; b.textContent = 'Recenter body';
+    $('pQuit').before(b);
+    b.onclick = () => { BodyCam.recenter(); this.g.resume(); };
+    if (typeof I18n !== 'undefined' && LANG !== 'en') I18n.apply(b);
+  };
 })();
 
 </script>

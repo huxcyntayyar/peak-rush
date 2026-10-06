@@ -1,6 +1,6 @@
 // Peak Rush service worker. Bump VERSION whenever you upload a new index.html,
 // otherwise phones keep the old cached copy.
-const VERSION = 'peakrush-v16';
+const VERSION = 'peakrush-v17';
 const CORE = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './three.module.min.js'];
 
 self.addEventListener('install', e => {
@@ -10,7 +10,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== 'peakrush-mediapipe').map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -37,6 +37,17 @@ self.addEventListener('fetch', e => {
         const net = fetch(req).then(res => { if (res.ok || res.type === 'opaque') c.put(req, res.clone()); return res; }).catch(() => hit);
         return hit || net;
       }))
+    );
+    return;
+  }
+
+  // Body tracking (MediaPipe library + pose model): download once, then keep.
+  if ((url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('@mediapipe/')) || (url.hostname === 'storage.googleapis.com' && url.pathname.includes('mediapipe-models'))) {
+    e.respondWith(
+      caches.open('peakrush-mediapipe').then(c => c.match(req).then(hit => hit || fetch(req).then(res => {
+        if (res.ok) c.put(req, res.clone());
+        return res;
+      })))
     );
     return;
   }
